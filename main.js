@@ -7,15 +7,20 @@ function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
-    show: false, // Start hidden, show only when ready
-    frame: false, // Completely removes the native frame
-    transparent: true, // Enable transparency
-    alwaysOnTop: true, // Keep on top of other windows
-    minimizable: false,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: false,
+    resizable: false,
     maximizable: false,
-    resizable: false, // Prevent resizing, which can trigger title bar on some OS
-    titleBarStyle: 'hidden', // macOS-specific, harmless on other platforms
-    skipTaskbar: true, // Remove from taskbar
+    minimizable: false,
+    thickFrame: false,
+    type: 'toolbar',
+    focusable: false,         // never gains focus → no blur flash
+    alwaysOnTop: true,
+    skipTaskbar: true,
+
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -29,23 +34,27 @@ function createWindow() {
     win.show();
   });
 
-  // Handle focus and blur to prevent title bar reappearing
+  // When the window loses focus (e.g., clicking on another monitor)
+  win.on('blur', () => {
+    // Some OS versions might still try to paint a background. This prevents it.
+    win.setBackgroundColor('#00000000');
+  });
+
+  // When the window gains focus
   win.on('focus', () => {
-    win.setIgnoreMouseEvents(false); // Ensure interaction is possible
-    win.setHasShadow(false); // Remove shadow that might hint at a frame
+    // Allow mouse events and re-assert that there's no shadow.
+    win.setIgnoreMouseEvents(false);
+    win.setHasShadow(false);
   });
 
-  // Monitor window movement or display changes
+  // You can keep these as they are harmless and can help in some edge cases
   win.on('moved', () => {
-    win.setBackgroundColor('#00000000'); // Force transparent background (ARGB)
-    win.setHasShadow(false); // Ensure no frame-like shadow
+    win.setHasShadow(false);
   });
-
   // Optional: Handle multi-monitor display changes
   const { screen } = require('electron');
   screen.on('display-metrics-changed', () => {
-    win.setBackgroundColor('#00000000'); // Re-apply transparency
-    win.setHasShadow(false); // Re-apply no shadow
+    win.setHasShadow(false);
   });
 }
 
